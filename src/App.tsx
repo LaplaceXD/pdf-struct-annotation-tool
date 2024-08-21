@@ -4,6 +4,8 @@ import { ComponentProps, forwardRef, useEffect, useRef, useState } from "react";
 import type { Line } from "./tsv/types";
 import { saveLinesToTsv, parseTsvFile } from "./tsv/utils";
 import {
+  deleteLine,
+  excludeLine,
   insertNewLine,
   backspace,
   incrementIndent,
@@ -45,6 +47,10 @@ export default function App() {
         setLines(incrementIndent(lines, activeLine));
       } else if (e.code === "ArrowLeft") {
         setLines(decrementIndent(lines, activeLine));
+      } else if (e.ctrlKey && e.code === "Delete") {
+        setLines(excludeLine(lines, activeLine));
+      } else if (e.code === "Delete") {
+        setLines(deleteLine(lines, activeLine));
       }
     };
 
@@ -100,6 +106,8 @@ export default function App() {
           keyCode="ArrowLeft"
           description="Decrement indent of current line"
         />
+        <Action keyCode="Ctrl + Delete" description="Exclude line" />
+        <Action keyCode="Delete" description="Delete line" />
       </section>
 
       <ul className="container py-12 m-auto">

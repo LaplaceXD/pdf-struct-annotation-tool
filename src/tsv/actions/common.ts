@@ -69,6 +69,52 @@ export function insertNewLine(linesList: Line[], target: number) {
 }
 
 /**
+ * Responsible for deleting a line.
+ *
+ * @param linesList - The array of objects.
+ * @param target - The index of the target line.
+ * @returns The array of objects with the line deleted.
+ */
+export function deleteLine(linesList: Line[], target: number) {
+  // This is a pure function
+  const lines = [...linesList];
+
+  // If this is an indented block
+  if (lines[target].label === "d") {
+    // Update the pointers of the child lines
+    updateChildPointers(lines, target);
+  }
+
+  // Set transition label
+  lines[target].label = "e";
+
+  return calculateIndent(lines);
+}
+
+/**
+ * Responsible for excluding the line from the dataset.
+ *
+ * @param linesList - The array of objects.
+ * @param target - The index of the target line.
+ * @returns The array of objects with the line excluded.
+ */
+export function excludeLine(linesList: Line[], target: number) {
+  // This is a pure function
+  const lines = [...linesList];
+
+  // If this is an indented block
+  if (lines[target].label === "d") {
+    // Update the pointers of the child lines
+    updateChildPointers(lines, target);
+  }
+
+  // Set transition label
+  lines[target].label = "x";
+
+  return calculateIndent(lines);
+}
+
+/**
  * Responsible for joining the target with the previous line.
  *
  * @param linesList - The array of objects.
