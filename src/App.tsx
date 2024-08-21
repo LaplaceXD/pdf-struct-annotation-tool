@@ -2,7 +2,7 @@ import { clsx } from "clsx";
 import { ComponentProps, forwardRef, useEffect, useRef, useState } from "react";
 
 import type { Line } from "./tsv/types";
-import { parseTsvFile } from "./tsv/utils";
+import { saveLinesToTsv, parseTsvFile } from "./tsv/utils";
 import {
   insertNewLine,
   backspace,
@@ -76,6 +76,7 @@ export default function App() {
         />
 
         <section role="menu" className="flex gap-4">
+          <Button onClick={() => saveLinesToTsv(lines)}>Save</Button>
           <Button onClick={() => setExpanded(!expanded)}>
             {expanded ? "Collapse" : "Expand"}
           </Button>

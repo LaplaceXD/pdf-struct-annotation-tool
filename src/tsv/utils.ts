@@ -34,6 +34,36 @@ export async function parseTsvFile(file: File) {
 }
 
 /**
+ * Save the array of objects to a TSV file.
+ *
+ * @param lines - The array of objects.
+ * @returns nothing
+ */
+export function saveLinesToTsv(lines: Line[]): void {
+  const content = lines
+    // Tab separate the values
+    .map((line) => {
+      return `${line.text}\t${line.pointer}\t${line.label}`;
+    })
+    // Join the lines with a newline
+    .join("\n");
+
+  // Create a blob with the content
+  const blob = new Blob([content], { type: "text/plain" });
+  // Create a URL for the blob
+  const url = URL.createObjectURL(blob);
+
+  // Create an anchor element to download the file
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "output.tsv";
+  a.click();
+
+  // Revoke the URL
+  URL.revokeObjectURL(url);
+}
+
+/**
  * Calculate the indentation level of each line.
  *
  * @param lines - The array of objects.
