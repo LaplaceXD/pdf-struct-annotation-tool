@@ -28,6 +28,7 @@ export function incrementIndent(linesList: Line[], target: number): Line[] {
 
   // The parent should now be an indented block transition
   lines[parent].label = "d";
+  lines[target].label = "s";
 
   // Retrieve the adjacent nodes
   const prevNode = target - 1;
@@ -131,6 +132,8 @@ export function decrementIndent(linesList: Line[], target: number): Line[] {
   // Retrieve the current parent of the target, and the grandparent
   // the grandparent will be the new parent after the operation
   const parent = lines[target].parent;
+  if (parent === -1) return linesList; // Already at root level
+
   const grandParent = lines[parent].parent;
 
   // Retrieve the adjacent nodes
@@ -168,11 +171,20 @@ export function decrementIndent(linesList: Line[], target: number): Line[] {
   if (lines[prevNode].indent < lines[target].indent) {
     lines[prevNode].label = "s";
 
-    // fix the issue here
-    if (lines[nextNode].indent === lines[target].indent) {
+    // Check if the prevNode has more than one children
+    if (lines.filter((line) => line.parent === parent).length > 1) {
       lines[target].label = "d";
 
-      for (let i = 0; i < lines.length; i++) {
+      console.log("HELLO!");
+
+      for (let i = target + 1; i < lines.length; ++i) {
+        // Since the children of the current node will be merged with the children
+        // of the previous parent, we need to unset the pointer of middle children
+        if (lines[i].parent === target && lines[i].pointer === prevNode + 1) {
+          lines[i].pointer = 0;
+        }
+
+        // Point all the nodes pointing to the previous node to the target node
         if (lines[i].pointer !== 0 && lines[i].pointer === prevNode + 1) {
           lines[i].pointer = target + 1;
         }
