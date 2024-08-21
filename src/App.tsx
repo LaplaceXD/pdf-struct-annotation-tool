@@ -2,8 +2,13 @@ import { clsx } from "clsx";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Line } from "./tsv/types";
-import { parseTsvFile, calculateIndent } from "./tsv/utils";
-import { incrementIndent, decrementIndent } from "./tsv/actions/indents";
+import { parseTsvFile } from "./tsv/utils";
+import {
+  insertNewLine,
+  backspace,
+  incrementIndent,
+  decrementIndent,
+} from "./tsv/actions";
 
 export default function App() {
   const [lines, setLines] = useState<Line[]>([]);
@@ -31,53 +36,6 @@ export default function App() {
     [lines, activeLine, setActiveLine],
   );
 
-  const handleContinuous = useCallback(() => {
-    if (activeLine === 0) return;
-
-    const newLines = [...lines];
-    const prevNode = activeLine - 1;
-    const grandParent = newLines[prevNode].parent;
-
-    if (newLines[prevNode].label === "d") {
-      for (let i = prevNode + 1; i < newLines.length; i++) {
-        if (newLines[i].pointer === prevNode + 1) {
-          newLines[i].pointer = grandParent === -1 ? -1 : grandParent + 1;
-        }
-
-        if (newLines[i].parent === prevNode && newLines[i].indent === 1) {
-          newLines[i].pointer = 0;
-        }
-      }
-    }
-
-    newLines[prevNode].label = "c";
-
-    setLines(calculateIndent(newLines));
-  }, [lines, activeLine, setLines]);
-
-  const handleSameLevel = useCallback(() => {
-    const newLines = [...lines];
-
-    const grandParent = newLines[activeLine].parent;
-
-    if (newLines[activeLine].label === "d") {
-      for (let i = activeLine + 1; i < newLines.length; i++) {
-        if (newLines[i].pointer === activeLine + 1) {
-          newLines[i].pointer = grandParent === -1 ? -1 : grandParent + 1;
-        }
-
-        if (newLines[i].parent === activeLine && newLines[i].indent === 1) {
-          newLines[i].pointer = 0;
-        }
-      }
-    }
-
-    newLines[activeLine].label = "s";
-
-    setLines(calculateIndent(newLines));
-    setActiveLine((activeLine) => activeLine + 1);
-  }, [lines, activeLine, setLines]);
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Prevent the scrollbar from moving when using the arrow keys.
@@ -88,9 +46,10 @@ export default function App() {
       } else if (e.code === "ArrowUp") {
         handleLineNavigation("up");
       } else if (e.code === "Backspace") {
-        handleContinuous();
+        setLines(backspace(lines, activeLine));
       } else if (e.code === "Enter") {
-        handleSameLevel();
+        setLines(insertNewLine(lines, activeLine));
+        setActiveLine((activeLine) => activeLine + 1);
       } else if (e.code === "ArrowRight") {
         setLines(incrementIndent(lines, activeLine));
       } else if (e.code === "ArrowLeft") {
@@ -102,7 +61,7 @@ export default function App() {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [handleLineNavigation, handleContinuous, handleSameLevel]);
+  }, [lines, activeLine, setLines, setActiveLine, handleLineNavigation]);
 
   useEffect(() => {
     // This is just for logging
