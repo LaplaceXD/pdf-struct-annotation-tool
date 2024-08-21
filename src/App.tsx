@@ -20,6 +20,7 @@ const scrollBehavior: ScrollIntoViewOptions = {
 
 export default function App() {
   const [expanded, setExpanded] = useState(false);
+  const [initialValues, setInitialValues] = useState<Line[]>([]);
 
   const [lines, setLines] = useState<Line[]>([]);
   const [activeLine, setActiveLine] = useState(0);
@@ -31,27 +32,25 @@ export default function App() {
       e.preventDefault();
 
       if (e.code === "ArrowDown") {
-        setActiveLine(
-          activeLine < lines.length - 1 ? activeLine + 1 : activeLine,
-        );
+        activeLine < lines.length - 1 && setActiveLine(activeLine + 1);
         activeRef.current?.scrollIntoView(scrollBehavior);
       } else if (e.code === "ArrowUp") {
-        setActiveLine(activeLine > 0 ? activeLine - 1 : activeLine);
+        activeLine > 0 && setActiveLine(activeLine - 1);
         activeRef.current?.scrollIntoView(scrollBehavior);
       } else if (e.code === "Space") {
-        setLines(backspace(lines, activeLine));
+        setLines(backspace(lines.slice(), activeLine));
         activeLine < lines.length - 1 && setActiveLine(activeLine + 1);
       } else if (e.code === "Enter") {
-        setLines(insertNewLine(lines, activeLine));
-        setActiveLine((activeLine) => activeLine + 1);
+        setLines(insertNewLine(lines.slice(), activeLine));
+        activeLine < lines.length - 1 && setActiveLine(activeLine + 1);
       } else if (e.code === "ArrowRight") {
-        setLines(incrementIndent(lines, activeLine));
+        setLines(incrementIndent(lines.slice(), activeLine));
       } else if (e.code === "ArrowLeft") {
-        setLines(decrementIndent(lines, activeLine));
+        setLines(decrementIndent(lines.slice(), activeLine));
       } else if (e.code === "Backspace") {
-        setLines(excludeLine(lines, activeLine));
+        setLines(excludeLine(lines.slice(), activeLine));
       } else if (e.code === "Delete") {
-        setLines(deleteLine(lines, activeLine));
+        setLines(deleteLine(lines.slice(), activeLine));
       }
     };
 
@@ -60,11 +59,6 @@ export default function App() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [lines, activeLine, setLines, setActiveLine]);
-
-  useEffect(() => {
-    // This is just for logging
-    console.table(lines);
-  }, [lines]);
 
   return (
     <div>
@@ -78,15 +72,22 @@ export default function App() {
             if (file) {
               const lines = await parseTsvFile(file);
               setLines(lines);
+              setInitialValues(lines.map((line) => ({ ...line }))); // Deep copy
             }
           }}
         />
 
         <section role="menu" className="flex gap-4">
-          <Button onClick={() => saveLinesToTsv(lines)}>Save</Button>
-          <Button onClick={() => setExpanded(!expanded)}>
+          <Button onClick={() => setExpanded(!expanded)} variant="outline">
             {expanded ? "Collapse" : "Expand"}
           </Button>
+          <Button
+            onClick={() => setLines(initialValues.map((line) => ({ ...line })))} // Deep copy
+            variant="outline"
+          >
+            Reset
+          </Button>
+          <Button onClick={() => saveLinesToTsv(lines)}>Save</Button>
         </section>
       </header>
 
@@ -175,11 +176,18 @@ const LineDisplay = forwardRef<
   );
 });
 
-function Button({ className, children, ...props }: ComponentProps<"button">) {
+function Button({
+  className,
+  children,
+  variant = "primary",
+  ...props
+}: ComponentProps<"button"> & { variant?: "primary" | "outline" }) {
   return (
     <button
       className={clsx(
-        "bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-semibold capitalize",
+        "px-4 py-2 rounded-md text-sm font-semibold capitalize",
+        variant === "outline" && "bg-white border border-black text-blue-500",
+        variant === "primary" && "bg-blue-500 text-white",
         className,
       )}
       {...props}

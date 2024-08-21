@@ -48,14 +48,11 @@ function updateChildPointers(lines: Line[], target: number): Line[] {
 /**
  * Responsible for inserting a new line after the target.
  *
- * @param linesList - The array of objects.
+ * @param lines - The array of objects.
  * @param target - The index of the target line.
  * @returns The array of objects with the new line inserted.
  */
-export function insertNewLine(linesList: Line[], target: number) {
-  // This is a pure function
-  const lines = [...linesList];
-
+export function insertNewLine(lines: Line[], target: number) {
   // If this is an indented block
   if (lines[target].label === "d") {
     // Update the pointers of the child lines
@@ -71,14 +68,11 @@ export function insertNewLine(linesList: Line[], target: number) {
 /**
  * Responsible for deleting a line.
  *
- * @param linesList - The array of objects.
+ * @param lines - The array of objects.
  * @param target - The index of the target line.
  * @returns The array of objects with the line deleted.
  */
-export function deleteLine(linesList: Line[], target: number) {
-  // This is a pure function
-  const lines = [...linesList];
-
+export function deleteLine(lines: Line[], target: number) {
   // If this is an indented block
   if (lines[target].label === "d") {
     // Update the pointers of the child lines
@@ -94,14 +88,11 @@ export function deleteLine(linesList: Line[], target: number) {
 /**
  * Responsible for excluding the line from the dataset.
  *
- * @param linesList - The array of objects.
+ * @param lines - The array of objects.
  * @param target - The index of the target line.
  * @returns The array of objects with the line excluded.
  */
-export function excludeLine(linesList: Line[], target: number) {
-  // This is a pure function
-  const lines = [...linesList];
-
+export function excludeLine(lines: Line[], target: number) {
   // If this is an indented block
   if (lines[target].label === "d") {
     // Update the pointers of the child lines
@@ -117,15 +108,12 @@ export function excludeLine(linesList: Line[], target: number) {
 /**
  * Responsible for joining the target with the next line.
  *
- * @param linesList - The array of objects.
+ * @param lines - The array of objects.
  * @param target - The index of the target line.
  * @returns The array of objects with the backspace operation applied.
  */
-export function backspace(linesList: Line[], target: number) {
-  if (target === linesList.length - 1) return linesList;
-
-  // This is a pure function
-  const lines = [...linesList];
+export function backspace(lines: Line[], target: number) {
+  if (target === lines.length - 1) return lines;
 
   // Backspace operation is applied to the previous node, since the previous node
   // dictates the transition label to this node
