@@ -70,6 +70,8 @@ export function saveLinesToTsv(lines: Line[]): void {
  * @returns The array of objects with the indentation level.
  */
 export function calculateIndent(lines: Line[]): Line[] {
+  let prevSetPointer = 0;
+
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
     const prevLine = lines[i - 1];
@@ -97,6 +99,24 @@ export function calculateIndent(lines: Line[]): Line[] {
       // as the previous line and the same parent
       line.indent = prevLine.indent;
       line.parent = prevLine.parent;
+    }
+
+    // Prevent unnecessary pointers sequence from occuring
+    // With the current implementation of indentation it is possible
+    // to get a pointer sequence of 6 0 6 on the same indent block
+    // the latter 6 is not necessary, since we already resetted to 6
+    if (line.label === "d") {
+      // Reset on a new indented block
+      prevSetPointer = 0;
+    } else if (line.pointer !== 0) {
+      // check if the current line pointer is set
+      if (line.pointer === prevSetPointer) {
+        // if it is a duplicate, reset the pointer
+        line.pointer = 0;
+      } else {
+        // if not, update the prevSetPointer
+        prevSetPointer = line.pointer;
+      }
     }
   }
 
