@@ -221,5 +221,41 @@ export function decrementIndent(lines: Line[], target: number): Line[] {
     }
   }
 
+  // Handle the case when you are moving a nested indented block
+  // Example:
+  // 1. Line 1
+  //  1.1 Line 2 <-- target
+  //    1.1.1 Line 3
+  //      1.1.1.1 Line 4 (pointer: 1)
+  //  1.2 Line 5
+  //
+  //  After the operation:
+  //  1. Line 1
+  //  1.1 Line 2 <-- target
+  //    1.1.1 Line 3
+  //      1.1.1.1 ine 4 (pointer: 2)
+  //    1.2 Line 5
+  let nextSameIndentNode = nextNode;
+  while (
+    nextSameIndentNode < lines.length &&
+    lines[nextSameIndentNode].indent > lines[target].indent
+  ) {
+    nextSameIndentNode++;
+  }
+
+  if (
+    nextSameIndentNode < lines.length &&
+    lines[nextSameIndentNode].parent == lines[target].parent &&
+    nextSameIndentNode != nextNode
+  ) {
+    const lastDescendant = nextSameIndentNode - 1;
+
+    if (lines[lastDescendant].indent - lines[target].indent > 1) {
+      lines[lastDescendant].pointer = target + 1;
+    } else {
+      lines[lastDescendant].pointer = 0;
+    }
+  }
+
   return calculateIndent(lines);
 }
