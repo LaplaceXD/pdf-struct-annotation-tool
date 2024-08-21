@@ -4,16 +4,13 @@ import { calculateIndent } from "../utils";
 /**
  * Increment indentation to a target line.
  *
- * @param linesList - The array of objects.
+ * @param lines - The array of objects.
  * @param target - The index of the line to apply the indentation.
  * @returns The array of objects with the indentation applied.
  */
-export function incrementIndent(linesList: Line[], target: number): Line[] {
+export function incrementIndent(lines: Line[], target: number): Line[] {
   // Can't indent the first line
-  if (target === 0) return linesList;
-
-  // Pure function operation
-  const lines = [...linesList];
+  if (target === 0) return lines;
 
   // Retrieve the parent of the target, after applying the indentation
   //
@@ -126,21 +123,18 @@ export function incrementIndent(linesList: Line[], target: number): Line[] {
 /**
  * Decrement indentation of a target line.
  *
- * @param linesList - The array of objects.
+ * @param lines - The array of objects.
  * @param target - The index of the line to apply the indentation.
  * @returns The array of objects with the indentation applied.
  */
-export function decrementIndent(linesList: Line[], target: number): Line[] {
-  // Can't remove indentation from the first line
-  if (target === 0) return linesList;
-
-  // Pure function operation
-  const lines = [...linesList];
+export function decrementIndent(lines: Line[], target: number): Line[] {
+  // Can't decrement indentation from the first line
+  if (target === 0) return lines;
 
   // Retrieve the current parent of the target, and the grandparent
   // the grandparent will be the new parent after the operation
   const parent = lines[target].parent;
-  if (parent === -1) return linesList; // Already at root level
+  if (parent === -1) return lines; // Already at root level
 
   const grandParent = lines[parent].parent;
 

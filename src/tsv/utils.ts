@@ -70,11 +70,8 @@ export function saveLinesToTsv(lines: Line[]): void {
  * @returns The array of objects with the indentation level.
  */
 export function calculateIndent(lines: Line[]): Line[] {
-  // Calculate the indentation level.
-  return lines.map((line, i, lines) => {
-    // The first line has no pointer, just return as is.
-    if (i === 0) return line;
-
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
     const prevLine = lines[i - 1];
 
     if (prevLine.pointer === -1) {
@@ -101,7 +98,7 @@ export function calculateIndent(lines: Line[]): Line[] {
       line.indent = prevLine.indent;
       line.parent = prevLine.parent;
     }
+  }
 
-    return line;
-  });
+  return lines;
 }
