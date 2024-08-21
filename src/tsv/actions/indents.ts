@@ -205,6 +205,10 @@ export function decrementIndent(linesList: Line[], target: number): Line[] {
     lines[prevNode].pointer = grandParent === -1 ? -1 : grandParent + 1;
   }
 
+  // TODO matus: this has to be unconditionally
+  lines[prevNode].label = "s";
+
+  
   // Look at the indentation differences between the target
   // and the next node
   //

@@ -115,37 +115,38 @@ export function excludeLine(linesList: Line[], target: number) {
 }
 
 /**
- * Responsible for joining the target with the previous line.
+ * Responsible for joining the target with the next line.
  *
  * @param linesList - The array of objects.
  * @param target - The index of the target line.
  * @returns The array of objects with the backspace operation applied.
  */
 export function backspace(linesList: Line[], target: number) {
-  if (target === 0) return linesList;
+  if (target === linesList.length -1 ) return linesList;
 
   // This is a pure function
   const lines = [...linesList];
 
   // Backspace operation is applied to the previous node, since the previous node
   // dictates the transition label to this node
-  const prevNode = target - 1;
+  // const prevNode = target - 1;
+  const thisNode = target;
 
   // If the previous node is an indented block
-  if (lines[prevNode].label === "d") {
+  if (lines[thisNode].label === "d") {
     // Update the pointers of the child lines
-    updateChildPointers(lines, prevNode);
+    updateChildPointers(lines, thisNode);
   }
 
   // Set transition label of hte previous node
-  lines[prevNode].label = "c";
+  lines[thisNode].label = "c";
 
   // If the target node has a lower indent level than the previous node
-  if (lines[target].indent < lines[prevNode].indent) {
+  if (lines[target+1].indent < lines[thisNode].indent) {
     // The target node should now hold the pointer of the previous node
     // to ensure that they have the same indentation level
-    lines[target].pointer = lines[prevNode].pointer;
-    lines[prevNode].pointer = 0;
+    lines[target+1].pointer = lines[thisNode].pointer;
+    lines[thisNode].pointer = 0;
   }
 
   // Other cases, are already accounted for when the indentation is calculated
