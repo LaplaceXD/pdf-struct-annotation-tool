@@ -154,13 +154,13 @@ export function decrementIndent(linesList: Line[], target: number): Line[] {
   // Case 1: Prev node is the parent node
   // 1. Line 1 <-- prev node (label: "d")
   //  1.1 Line 2 <-- target
-  //    1.1.1 Line 3 <-- next node (pointer: 1)
+  //    1.1.1 Line 3
   //  1.2 Line 4
   //
   // After the operation:
   // 1. Line 1 <-- prev node (label: "s")
   // 1.1 Line 2 <-- target (label: "d") <-- replaces the previous node as parent
-  //  1.1.1 Line 3 <-- next node (pointer: 0)
+  //  1.1.1 Line 3
   //  1.2 Line 4
   //
   // Case 2: Prev node is a sibling or a deeper indented node
@@ -183,8 +183,6 @@ export function decrementIndent(linesList: Line[], target: number): Line[] {
     if (lines.filter((line) => line.parent === parent).length > 1) {
       lines[target].label = "d";
 
-      console.log("HELLO!");
-
       for (let i = target + 1; i < lines.length; ++i) {
         // Since the children of the current node will be merged with the children
         // of the previous parent, we need to unset the pointer of middle children
@@ -199,6 +197,11 @@ export function decrementIndent(linesList: Line[], target: number): Line[] {
       }
     }
   } else {
+    // Previous node can't be continuous when the next node is on a different indentation
+    if (lines[prevNode].label === "c") {
+      lines[prevNode].label = "s";
+    }
+
     lines[prevNode].pointer = grandParent === -1 ? -1 : grandParent + 1;
   }
 

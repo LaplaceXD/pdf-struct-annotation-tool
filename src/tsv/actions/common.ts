@@ -94,5 +94,15 @@ export function backspace(linesList: Line[], target: number) {
   // Set transition label of hte previous node
   lines[prevNode].label = "c";
 
+  // If the target node has a lower indent level than the previous node
+  if (lines[target].indent < lines[prevNode].indent) {
+    // The target node should now hold the pointer of the previous node
+    // to ensure that they have the same indentation level
+    lines[target].pointer = lines[prevNode].pointer;
+    lines[prevNode].pointer = 0;
+  }
+
+  // Other cases, are already accounted for when the indentation is calculated
+
   return calculateIndent(lines);
 }
