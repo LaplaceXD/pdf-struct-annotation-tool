@@ -122,7 +122,7 @@ export function excludeLine(linesList: Line[], target: number) {
  * @returns The array of objects with the backspace operation applied.
  */
 export function backspace(linesList: Line[], target: number) {
-  if (target === linesList.length -1 ) return linesList;
+  if (target === linesList.length - 1) return linesList;
 
   // This is a pure function
   const lines = [...linesList];
@@ -142,10 +142,10 @@ export function backspace(linesList: Line[], target: number) {
   lines[thisNode].label = "c";
 
   // If the target node has a lower indent level than the previous node
-  if (lines[target+1].indent < lines[thisNode].indent) {
+  if (lines[target + 1].indent < lines[thisNode].indent) {
     // The target node should now hold the pointer of the previous node
     // to ensure that they have the same indentation level
-    lines[target+1].pointer = lines[thisNode].pointer;
+    lines[target + 1].pointer = lines[thisNode].pointer;
     lines[thisNode].pointer = 0;
   }
 

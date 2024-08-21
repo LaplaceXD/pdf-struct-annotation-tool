@@ -95,10 +95,7 @@ export default function App() {
         <Action keyCode="ArrowUp" description="Move Up" />
         <Action keyCode="ArrowDown" description="Move Down" />
         <Action keyCode="Enter" description="Insert new line" />
-        <Action
-          keyCode="Space"
-          description="Concatenate with previous line"
-        />
+        <Action keyCode="Space" description="Concatenate with previous line" />
         <Action
           keyCode="ArrowRight"
           description="Increment indent of current line"

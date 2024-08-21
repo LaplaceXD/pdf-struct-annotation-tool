@@ -151,19 +151,7 @@ export function decrementIndent(linesList: Line[], target: number): Line[] {
   // Look at the indentation differences between the target
   // and the previous node
   //
-  // Case 1: Prev node is the parent node
-  // 1. Line 1 <-- prev node (label: "d")
-  //  1.1 Line 2 <-- target
-  //    1.1.1 Line 3
-  //  1.2 Line 4
-  //
-  // After the operation:
-  // 1. Line 1 <-- prev node (label: "s")
-  // 1.1 Line 2 <-- target (label: "d") <-- replaces the previous node as parent
-  //  1.1.1 Line 3
-  //  1.2 Line 4
-  //
-  // Case 2: Prev node is a sibling or a deeper indented node
+  // Case 1: Prev node is a sibling or a deeper indented node
   // 1. Line 1
   //  1.1 Line 2 <-- grandparent
   //    1.1.1 Line 3 <-- parent
@@ -176,39 +164,43 @@ export function decrementIndent(linesList: Line[], target: number): Line[] {
   //    1.1.1 Line 3 <-- parent
   //      1.1.1.1 Line 4 <-- prev node (pointer: 2) <-- adjusted to grandparent
   //  1.2 Line 4 <-- target
-  if (lines[prevNode].indent < lines[target].indent) {
-    lines[prevNode].label = "s";
+  //
+  // Case 2: Prev node is the parent node
+  // 1. Line 1 <-- prev node (label: "d")
+  //  1.1 Line 2 <-- target
+  //    1.1.1 Line 3
+  //  1.2 Line 4
+  //
+  // After the operation:
+  // 1. Line 1 <-- prev node (label: "s")
+  // 1.1 Line 2 <-- target (label: "d") <-- replaces the previous node as parent
+  //  1.1.1 Line 3
+  //  1.2 Line 4
+  //
+  if (lines[prevNode].indent >= lines[target].indent) {
+    // Case 1, prev node is a sibling or a deeper indented node
+    lines[prevNode].pointer = grandParent === -1 ? -1 : grandParent + 1;
+  } else if (lines.filter((line) => line.parent === parent).length > 1) {
+    // Case 2, prev node is the parent node, and the target node replaces it if it has children
+    lines[target].label = "d";
 
-    // Check if the prevNode has more than one children
-    if (lines.filter((line) => line.parent === parent).length > 1) {
-      lines[target].label = "d";
+    for (let i = target + 1; i < lines.length; ++i) {
+      // Since the children of the current node will be merged with the children
+      // of the previous parent, we need to unset the pointer of middle children
+      if (lines[i].parent === target && lines[i].pointer === prevNode + 1) {
+        lines[i].pointer = 0;
+      }
 
-      for (let i = target + 1; i < lines.length; ++i) {
-        // Since the children of the current node will be merged with the children
-        // of the previous parent, we need to unset the pointer of middle children
-        if (lines[i].parent === target && lines[i].pointer === prevNode + 1) {
-          lines[i].pointer = 0;
-        }
-
-        // Point all the nodes pointing to the previous node to the target node
-        if (lines[i].pointer !== 0 && lines[i].pointer === prevNode + 1) {
-          lines[i].pointer = target + 1;
-        }
+      // Point all the nodes pointing to the previous node to the target node
+      if (lines[i].pointer !== 0 && lines[i].pointer === prevNode + 1) {
+        lines[i].pointer = target + 1;
       }
     }
-  } else {
-    // Previous node can't be continuous when the next node is on a different indentation
-    if (lines[prevNode].label === "c") {
-      lines[prevNode].label = "s";
-    }
-
-    lines[prevNode].pointer = grandParent === -1 ? -1 : grandParent + 1;
   }
 
   // TODO matus: this has to be unconditionally
   lines[prevNode].label = "s";
 
-  
   // Look at the indentation differences between the target
   // and the next node
   //
