@@ -46,6 +46,21 @@ export default function App() {
 
   const handleSameLevel = useCallback(() => {
     const newLines = [...lines];
+
+    const grandParent = newLines[activeLine].parent;
+
+    if (newLines[activeLine].label === "d") {
+      for (let i = activeLine + 1; i < newLines.length; i++) {
+        if (newLines[i].pointer === activeLine + 1) {
+          newLines[i].pointer = grandParent === -1 ? -1 : grandParent + 1;
+        }
+
+        if (newLines[i].parent === activeLine && newLines[i].indent === 1) {
+          newLines[i].pointer = 0;
+        }
+      }
+    }
+
     newLines[activeLine].label = "s";
 
     setLines(calculateIndent(newLines));
@@ -79,6 +94,7 @@ export default function App() {
   }, [handleLineNavigation, handleContinuous, handleSameLevel]);
 
   useEffect(() => {
+    // This is just for logging
     console.table(lines);
   }, [lines]);
 
