@@ -2,12 +2,8 @@ import { clsx } from "clsx";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Line } from "./tsv/types";
-import { parseTsvFile } from "./tsv/io";
-import {
-  incrementIndent,
-  decrementIndent,
-  calculateIndent,
-} from "./tsv/indents";
+import { parseTsvFile, calculateIndent } from "./tsv/utils";
+import { incrementIndent, decrementIndent } from "./tsv/actions/indents";
 
 export default function App() {
   const [lines, setLines] = useState<Line[]>([]);
@@ -39,7 +35,22 @@ export default function App() {
     if (activeLine === 0) return;
 
     const newLines = [...lines];
-    newLines[activeLine - 1].label = "c";
+    const prevNode = activeLine - 1;
+    const grandParent = newLines[prevNode].parent;
+
+    if (newLines[prevNode].label === "d") {
+      for (let i = prevNode + 1; i < newLines.length; i++) {
+        if (newLines[i].pointer === prevNode + 1) {
+          newLines[i].pointer = grandParent === -1 ? -1 : grandParent + 1;
+        }
+
+        if (newLines[i].parent === prevNode && newLines[i].indent === 1) {
+          newLines[i].pointer = 0;
+        }
+      }
+    }
+
+    newLines[prevNode].label = "c";
 
     setLines(calculateIndent(newLines));
   }, [lines, activeLine, setLines]);
@@ -108,7 +119,7 @@ export default function App() {
 
           if (file) {
             const lines = await parseTsvFile(file);
-            setLines(calculateIndent(lines));
+            setLines(lines);
           }
         }}
       />
