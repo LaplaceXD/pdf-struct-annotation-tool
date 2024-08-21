@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import { useEffect, useRef, useState } from "react";
+import { ComponentProps, forwardRef, useEffect, useRef, useState } from "react";
 
 import type { Line } from "./tsv/types";
 import { parseTsvFile } from "./tsv/utils";
@@ -17,9 +17,11 @@ const scrollBehavior: ScrollIntoViewOptions = {
 };
 
 export default function App() {
+  const [expanded, setExpanded] = useState(false);
+
   const [lines, setLines] = useState<Line[]>([]);
   const [activeLine, setActiveLine] = useState(0);
-  const activeRef = useRef<HTMLSpanElement>(null);
+  const activeRef = useRef<HTMLLIElement>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -58,53 +60,106 @@ export default function App() {
   }, [lines]);
 
   return (
-    <div className="container m-auto">
-      <input
-        type="file"
-        accept=".tsv"
-        onChange={async (e) => {
-          const file = e.target.files?.[0];
+    <div>
+      <header className="bg-black text-white px-12 py-6 flex justify-between">
+        <input
+          type="file"
+          accept=".tsv"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
 
-          if (file) {
-            const lines = await parseTsvFile(file);
-            setLines(lines);
-          }
-        }}
-      />
+            if (file) {
+              const lines = await parseTsvFile(file);
+              setLines(lines);
+            }
+          }}
+        />
 
-      <ul className="container py-12">
+        <section role="menu" className="flex gap-4">
+          <Button onClick={() => setExpanded(!expanded)}>
+            {expanded ? "Collapse" : "Expand"}
+          </Button>
+        </section>
+      </header>
+
+      <ul className="container py-12 m-auto">
         {lines.map((line, i) => (
-          <li
+          <LineDisplay
             key={i}
+            line={line}
+            num={i + 1}
             onClick={() => setActiveLine(i)}
-            className={clsx(
-              "grid grid-cols-[48px_1fr] gap-4 items-center even:bg-gray-50 odd:bg-gray-200",
-              i === activeLine && "!bg-blue-200",
-              line.label === "s" && "mb-8",
-              line.label === "x" && "!bg-red-200",
-            )}
-          >
-            <span className="justify-self-end text-gray-600 text-sm">
-              {i + 1}
-            </span>
-            <span
-              className={clsx(
-                "flex items-center hover:cursor-pointer",
-                line.label === "x" && "line-through text-red-500",
-                line.label === "e" && "line-through",
-              )}
-              style={{ paddingLeft: `${line.indent * 2}rem` }}
-              ref={i === activeLine ? activeRef : undefined}
-            >
-              {line.text}
-              {line.label === "c" ? (
-                <CarriageReturn className="inline ml-1 text-red-400" />
-              ) : null}
-            </span>
-          </li>
+            ref={i === activeLine ? activeRef : null}
+            active={i === activeLine}
+            expanded={expanded}
+          />
         ))}
       </ul>
     </div>
+  );
+}
+
+const LineDisplay = forwardRef<
+  HTMLLIElement,
+  {
+    line: Line;
+    onClick: () => void;
+    active?: boolean;
+    num: number;
+    expanded?: boolean;
+  }
+>(function ({ line, onClick, active, expanded, num }, ref) {
+  return (
+    <li
+      ref={ref}
+      onClick={onClick}
+      className={clsx(
+        "grid gap-4 items-center hover:cursor-pointer",
+        expanded ? "grid-cols-[repeat(3,32px)_1fr]" : "grid-cols-[32px_1fr]",
+        active ? "bg-blue-200" : "odd:bg-gray-200 even:bg-gray-50",
+        line.label === "s" && "mb-8",
+        line.label === "x" && "!bg-red-200",
+      )}
+    >
+      {expanded ? (
+        <>
+          <span className="justify-self-end text-gray-600 text-sm">
+            {line.label}
+          </span>
+          <span className="justify-self-end text-gray-600 text-sm">
+            {line.pointer}
+          </span>
+        </>
+      ) : null}
+      <span className="justify-self-end text-gray-600 text-sm">{num}</span>
+      <span
+        className={clsx(
+          "flex items-center hover:cursor-pointer",
+          line.label === "x" && "line-through text-red-500",
+          line.label === "e" && "line-through",
+        )}
+        style={{ paddingLeft: `${line.indent * 2}rem` }}
+      >
+        {line.text}
+        {line.label === "c" ? (
+          <CarriageReturn className="inline ml-1 text-red-400" />
+        ) : null}
+      </span>
+    </li>
+  );
+});
+
+function Button({ className, children, ...props }: ComponentProps<"button">) {
+  return (
+    <button
+      className={clsx(
+        "bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-semibold capitalize",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </button>
   );
 }
 
