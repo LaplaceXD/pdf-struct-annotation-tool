@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { Line } from "./tsv/types";
 import { parseTsvFile } from "./tsv/utils";
@@ -10,31 +10,16 @@ import {
   decrementIndent,
 } from "./tsv/actions";
 
+const scrollBehavior: ScrollIntoViewOptions = {
+  behavior: "auto",
+  block: "center",
+  inline: "nearest",
+};
+
 export default function App() {
   const [lines, setLines] = useState<Line[]>([]);
   const [activeLine, setActiveLine] = useState(0);
   const activeRef = useRef<HTMLLIElement>(null);
-
-  const handleLineNavigation = useCallback(
-    (direction: "up" | "down") => {
-      if (direction === "up") {
-        setActiveLine((activeLine) =>
-          activeLine > 0 ? activeLine - 1 : activeLine,
-        );
-      } else if (direction === "down") {
-        setActiveLine((activeLine) =>
-          activeLine < lines.length - 1 ? activeLine + 1 : activeLine,
-        );
-      }
-
-      activeRef.current?.scrollIntoView({
-        behavior: "auto",
-        block: "center",
-        inline: "nearest",
-      });
-    },
-    [lines, activeLine, setActiveLine],
-  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -42,9 +27,13 @@ export default function App() {
       e.preventDefault();
 
       if (e.code === "ArrowDown") {
-        handleLineNavigation("down");
+        setActiveLine(
+          activeLine < lines.length - 1 ? activeLine + 1 : activeLine,
+        );
+        activeRef.current?.scrollIntoView(scrollBehavior);
       } else if (e.code === "ArrowUp") {
-        handleLineNavigation("up");
+        setActiveLine(activeLine > 0 ? activeLine - 1 : activeLine);
+        activeRef.current?.scrollIntoView(scrollBehavior);
       } else if (e.code === "Backspace") {
         setLines(backspace(lines, activeLine));
       } else if (e.code === "Enter") {
@@ -61,7 +50,7 @@ export default function App() {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [lines, activeLine, setLines, setActiveLine, handleLineNavigation]);
+  }, [lines, activeLine, setLines, setActiveLine]);
 
   useEffect(() => {
     // This is just for logging
