@@ -19,7 +19,7 @@ const scrollBehavior: ScrollIntoViewOptions = {
 export default function App() {
   const [lines, setLines] = useState<Line[]>([]);
   const [activeLine, setActiveLine] = useState(0);
-  const activeRef = useRef<HTMLLIElement>(null);
+  const activeRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -76,19 +76,31 @@ export default function App() {
         {lines.map((line, i) => (
           <li
             key={i}
-            className={clsx(
-              "flex items-center hover:cursor-pointer",
-              i === activeLine ? "bg-blue-200" : "hover:bg-gray-200",
-              i >= 1 && lines[i - 1].label === "s" && "mt-4",
-            )}
             onClick={() => setActiveLine(i)}
-            style={{ paddingLeft: `${line.indent * 1.5}rem` }}
-            ref={i === activeLine ? activeRef : undefined}
+            className={clsx(
+              "grid grid-cols-[48px_1fr] gap-4 items-center even:bg-gray-50 odd:bg-gray-200",
+              i === activeLine && "!bg-blue-200",
+              line.label === "s" && "mb-8",
+              line.label === "x" && "!bg-red-200",
+            )}
           >
-            {line.text}
-            {line.label === "c" ? (
-              <CarriageReturn className="inline ml-1 text-red-400" />
-            ) : null}
+            <span className="justify-self-end text-gray-600 text-sm">
+              {i + 1}
+            </span>
+            <span
+              className={clsx(
+                "flex items-center hover:cursor-pointer",
+                line.label === "x" && "line-through text-red-500",
+                line.label === "e" && "line-through",
+              )}
+              style={{ paddingLeft: `${line.indent * 2}rem` }}
+              ref={i === activeLine ? activeRef : undefined}
+            >
+              {line.text}
+              {line.label === "c" ? (
+                <CarriageReturn className="inline ml-1 text-red-400" />
+              ) : null}
+            </span>
           </li>
         ))}
       </ul>
