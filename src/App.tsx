@@ -83,6 +83,25 @@ export default function App() {
         </section>
       </header>
 
+      <section className="grid grid-cols-4 container m-auto gap-2 p-4 bg-gray-100 mt-4 rounded-xl">
+        <h2 className="col-span-4 text-lg font-semibold">Keybinds</h2>
+        <Action keyCode="ArrowUp" description="Move Up" />
+        <Action keyCode="ArrowDown" description="Move Down" />
+        <Action keyCode="Enter" description="Insert new line" />
+        <Action
+          keyCode="Backspace"
+          description="Concatenate with previous line"
+        />
+        <Action
+          keyCode="ArrowRight"
+          description="Increment indent of current line"
+        />
+        <Action
+          keyCode="ArrowLeft"
+          description="Decrement indent of current line"
+        />
+      </section>
+
       <ul className="container py-12 m-auto">
         {lines.map((line, i) => (
           <LineDisplay
@@ -161,6 +180,21 @@ function Button({ className, children, ...props }: ComponentProps<"button">) {
     >
       {children}
     </button>
+  );
+}
+
+function Action({
+  keyCode,
+  description,
+}: {
+  keyCode: string;
+  description: string;
+}) {
+  return (
+    <span className="flex gap-2 items-center text-sm">
+      <kbd className="bg-black p-2 rounded-md text-white">{keyCode}</kbd>
+      {description}
+    </span>
   );
 }
 
