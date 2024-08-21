@@ -38,8 +38,9 @@ export default function App() {
       } else if (e.code === "ArrowUp") {
         setActiveLine(activeLine > 0 ? activeLine - 1 : activeLine);
         activeRef.current?.scrollIntoView(scrollBehavior);
-      } else if (e.code === "Backspace") {
+      } else if (e.code === "Space") {
         setLines(backspace(lines, activeLine));
+        activeLine < lines.length - 1 && setActiveLine(activeLine + 1);
       } else if (e.code === "Enter") {
         setLines(insertNewLine(lines, activeLine));
         setActiveLine((activeLine) => activeLine + 1);
@@ -47,7 +48,7 @@ export default function App() {
         setLines(incrementIndent(lines, activeLine));
       } else if (e.code === "ArrowLeft") {
         setLines(decrementIndent(lines, activeLine));
-      } else if (e.ctrlKey && e.code === "Delete") {
+      } else if (e.code === "Backspace") {
         setLines(excludeLine(lines, activeLine));
       } else if (e.code === "Delete") {
         setLines(deleteLine(lines, activeLine));
@@ -94,10 +95,7 @@ export default function App() {
         <Action keyCode="ArrowUp" description="Move Up" />
         <Action keyCode="ArrowDown" description="Move Down" />
         <Action keyCode="Enter" description="Insert new line" />
-        <Action
-          keyCode="Backspace"
-          description="Concatenate with previous line"
-        />
+        <Action keyCode="Space" description="Concatenate with previous line" />
         <Action
           keyCode="ArrowRight"
           description="Increment indent of current line"
@@ -106,7 +104,7 @@ export default function App() {
           keyCode="ArrowLeft"
           description="Decrement indent of current line"
         />
-        <Action keyCode="Ctrl + Delete" description="Exclude line" />
+        <Action keyCode="Backspace" description="Skip line" />
         <Action keyCode="Delete" description="Delete line" />
       </section>
 
