@@ -39,7 +39,7 @@ export async function parseTsvFile(file: File) {
  * @param lines - The array of objects.
  * @returns nothing
  */
-export function saveLinesToTsv(lines: Line[]): void {
+export function saveLinesToTsv(lines: Line[], filename: string): void {
   const content = lines
     // Tab separate the values
     .map((line) => {
@@ -56,7 +56,7 @@ export function saveLinesToTsv(lines: Line[]): void {
   // Create an anchor element to download the file
   const a = document.createElement("a");
   a.href = url;
-  a.download = "output.tsv";
+  a.download = filename;
   a.click();
 
   // Revoke the URL
