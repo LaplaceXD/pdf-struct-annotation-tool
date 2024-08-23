@@ -1,8 +1,8 @@
 import { clsx } from "clsx";
 import { ComponentProps, forwardRef, useEffect, useRef, useState } from "react";
 
-import type { Line } from "./tsv/types";
-import { saveLinesToTsv, parseTsvFile } from "./tsv/utils";
+import type { Line } from "./annotations/types";
+import { saveLinesToTsv, parseTsvFile } from "./annotations/utils";
 import {
   deleteLine,
   excludeLine,
@@ -10,7 +10,7 @@ import {
   backspace,
   incrementIndent,
   decrementIndent,
-} from "./tsv/actions";
+} from "./annotations/actions";
 
 const scrollBehavior: ScrollIntoViewOptions = {
   behavior: "auto",

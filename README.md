@@ -1,6 +1,6 @@
-# TSV Assistance Tool
+# PDF Struct Annotation Tool
 
-This tool is designed to assist in the creation of TSV files for [pdf-struct](https://github.com/stanfordnlp/pdf-struct).
+This is a simple web-based tool for annotating PDFs, to create TSV files for [pdf-struct](https://github.com/stanfordnlp/pdf-struct).
 
 ## Setup
 
