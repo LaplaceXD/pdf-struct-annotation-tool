@@ -1,8 +1,14 @@
 import { clsx } from "clsx";
-import { ComponentProps, forwardRef, useEffect, useRef, useState } from "react";
+import {
+  type ComponentProps,
+  forwardRef,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import type { Line } from "./annotations/types";
-import { saveLinesToTsv, parseTsvFile } from "./annotations/utils";
+import { saveLinesToTsv, parseTsvToLines } from "./annotations/utils";
 import {
   deleteLine,
   excludeLine,
@@ -70,7 +76,8 @@ export default function App() {
             const file = e.target.files?.[0];
 
             if (file) {
-              const lines = await parseTsvFile(file);
+              const lines = await parseTsvToLines(file);
+
               setLines(lines);
               setInitialValues(lines.map((line) => ({ ...line }))); // Deep copy
             }
@@ -91,8 +98,10 @@ export default function App() {
         </section>
       </header>
 
-      <section className="grid grid-cols-4 container m-auto gap-2 p-4 bg-gray-100 mt-4 rounded-xl">
-        <h2 className="col-span-4 text-lg font-semibold">Keybinds</h2>
+      <section className="grid grid-cols-2 md:grid-cols-4 container m-auto gap-2 p-4 bg-gray-100 mt-4 rounded-xl">
+        <h2 className="col-span-2 md:col-span-4 text-lg font-semibold">
+          Keybinds
+        </h2>
         <Action keyCode="ArrowUp" description="Move Up" />
         <Action keyCode="ArrowDown" description="Move Down" />
         <Action keyCode="Enter" description="Insert new line" />
