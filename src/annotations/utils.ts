@@ -115,13 +115,14 @@ export function updatePointersFromIndent(lines: Line[]) {
       // Reset the label for previously indented blocks that now have no children
       line.label = line.label === "d" ? "s" : line.label;
     } else if (line.indent < nextLine.indent) {
-      // If next line is indented, then this line has
-      // an indented block transition label 'd'
-      // also indented block labeled lines have unset pointers
+      // If next line is indented, then this line is an indented block
+      // indented block are labeled as "d", and will have unset pointers
       line.pointer = 0;
       line.label = "d";
 
-      // Push this lines pointer 1-indexed to the stack
+      // Push this line to the stack of pointers, since it is a parent indent block
+      // keep in mind that the current line index is i - 1, but we are
+      // pushing i, since the pointers are 1-indexed
       pointers.push(i);
     } else {
       // If next line is less indented, then pop the stack with their difference
@@ -129,13 +130,20 @@ export function updatePointersFromIndent(lines: Line[]) {
       //
       // Example:
       // 1. a
+      //  2. b <-- last pointer in stack
+      //    3. c
+      //  4. d <-- next line has a lesser indent, and has an indent difference of 1
+      //
+      // Pop once as the difference is 1, which results in:
+      // 1. a <-- last pointer in stack
       //  2. b
       //    3. c
-      //  4. d <-- lesser indent
+      //  4. d
       for (let diff = line.indent - nextLine.indent; diff > 0; --diff) {
         pointers.pop();
       }
 
+      // Set the pointer to the last pointer in the stack, or -1 if the stack is empty
       line.pointer = pointers.length === 0 ? -1 : pointers[pointers.length - 1];
     }
   }
