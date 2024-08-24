@@ -1,8 +1,14 @@
 import { clsx } from "clsx";
-import { ComponentProps, forwardRef, useEffect, useRef, useState } from "react";
+import {
+  type ComponentProps,
+  forwardRef,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import type { Line } from "./annotations/types";
-import { saveLinesToTsv, parseTsvFile } from "./annotations/utils";
+import { saveLinesToTsv, parseTsvToLines } from "./annotations/utils";
 import {
   deleteLine,
   excludeLine,
@@ -62,7 +68,7 @@ export default function App() {
 
   return (
     <div>
-      <header className="bg-black text-white px-12 py-6 flex justify-between">
+      <header className="bg-black text-white px-4 py-4 flex justify-between flex-col gap-2 md:px-12 md:py-6 md:flex-row">
         <input
           type="file"
           accept=".tsv"
@@ -70,14 +76,15 @@ export default function App() {
             const file = e.target.files?.[0];
 
             if (file) {
-              const lines = await parseTsvFile(file);
+              const lines = await parseTsvToLines(file);
+
               setLines(lines);
               setInitialValues(lines.map((line) => ({ ...line }))); // Deep copy
             }
           }}
         />
 
-        <section role="menu" className="flex gap-4">
+        <section role="menu" className="flex gap-2 md:gap-4">
           <Button onClick={() => setExpanded(!expanded)} variant="outline">
             {expanded ? "Collapse" : "Expand"}
           </Button>
@@ -91,8 +98,10 @@ export default function App() {
         </section>
       </header>
 
-      <section className="grid grid-cols-4 container m-auto gap-2 p-4 bg-gray-100 mt-4 rounded-xl">
-        <h2 className="col-span-4 text-lg font-semibold">Keybinds</h2>
+      <section className="grid grid-cols-2 md:grid-cols-4 container m-auto gap-2 p-4 bg-gray-100 mt-4 rounded-xl">
+        <h2 className="col-span-2 md:col-span-4 text-lg font-semibold">
+          Keybinds
+        </h2>
         <Action keyCode="ArrowUp" description="Move Up" />
         <Action keyCode="ArrowDown" description="Move Down" />
         <Action keyCode="Enter" description="Insert new line" />

@@ -6,7 +6,7 @@ import type { Line } from "./types";
  * @param file - The TSV file to parse.
  * @returns The array of objects.
  */
-export async function parseTsvFile(file: File) {
+export async function parseTsvToLines(file: File): Promise<Line[]> {
   const contents = await file.text();
 
   const formattedContent = contents
@@ -26,11 +26,10 @@ export async function parseTsvFile(file: File) {
         pointer: parseInt(pointer),
         label: label as Line["label"],
         indent: 0,
-        parent: -1,
-      };
+      } satisfies Line;
     });
 
-  return calculateIndent(formattedContent);
+  return calculateIndentFromPointers(formattedContent);
 }
 
 /**
@@ -64,59 +63,80 @@ export function saveLinesToTsv(lines: Line[]): void {
 }
 
 /**
- * Calculate the indentation level of each line.
+ * Calculate the indentation level of each line based on the pointers.
  *
  * @param lines - The array of objects.
  * @returns The array of objects with the indentation level.
  */
-export function calculateIndent(lines: Line[]): Line[] {
-  let prevSetPointer = 0;
+export function calculateIndentFromPointers(lines: Line[]): Line[] {
+  let indent = 0;
 
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
     const prevLine = lines[i - 1];
 
-    if (prevLine.pointer === -1) {
-      // If the previous line points to -1 (root)
-      // then the current line has 0 indentation and no parent
-      line.indent = 0;
-      line.parent = -1;
-    } else if (prevLine.pointer !== 0) {
-      // If the previous line points has a set pointer,
-      // then set the indent of the current line to the pointed line's indent + 1
-      // and set the parent to the pointed line.
-      // Note: not quite sure if it's possible to have a 's' label with a pointer
-      line.indent = lines[prevLine.pointer - 1].indent + 1;
-      line.parent = prevLine.pointer - 1;
-    } else if (prevLine.label === "d") {
-      // If the previous line transitions the current line to an indented block
-      // then set the current line's indent to the previous line's indent + 1
-      // and set the parent to the previous line.
-      line.indent = prevLine.indent + 1;
-      line.parent = i - 1;
-    } else {
-      // Any other label 'c', 's', ... will have the same indentation level
-      // as the previous line and the same parent
-      line.indent = prevLine.indent;
-      line.parent = prevLine.parent;
+    if (prevLine.label === "d") {
+      // Indent increases for every indent block transition labels found
+      indent++;
+    } else if (prevLine.pointer > 0) {
+      // If the previous line has a pointer, then use the indentation level of the line
+      // being pointed to.
+      indent = lines[prevLine.pointer - 1].indent + 1;
+    } else if (prevLine.pointer === -1) {
+      // If the previous line has a pointer of -1, then it is a root line, reset the indent
+      indent = 0;
     }
 
-    // Prevent unnecessary pointers sequence from occuring
-    // With the current implementation of indentation it is possible
-    // to get a pointer sequence of 6 0 6 on the same indent block
-    // the latter 6 is not necessary, since we already resetted to 6
-    if (line.label === "d") {
-      // Reset on a new indented block
-      prevSetPointer = 0;
-    } else if (line.pointer !== 0) {
-      // check if the current line pointer is set
-      if (line.pointer === prevSetPointer) {
-        // if it is a duplicate, reset the pointer
-        line.pointer = 0;
-      } else {
-        // if not, update the prevSetPointer
-        prevSetPointer = line.pointer;
+    line.indent = indent;
+  }
+
+  return lines;
+}
+
+/**
+ * Update the pointer of each line accordingly based on
+ * the indentation level.
+ *
+ * @param lines - The array of objects.
+ * @returns The array of objects with the pointers updated.
+ */
+export function updatePointersFromIndent(lines: Line[]) {
+  // Stack to keep track of the pointers encountered for the current depth
+  const pointers = [];
+
+  for (let i = 1; i < lines.length; ++i) {
+    const line = lines[i - 1];
+    const nextLine = lines[i];
+
+    if (line.indent === nextLine.indent) {
+      // If next line has the same indentation level
+      // then unset the pointer
+      line.pointer = 0;
+      // Reset the label for previously indented blocks that now have no children
+      line.label = line.label === "d" ? "s" : line.label;
+    } else if (line.indent < nextLine.indent) {
+      // If next line is indented, then this line has
+      // an indented block transition label 'd'
+      // also indented block labeled lines have unset pointers
+      line.pointer = 0;
+      line.label = "d";
+
+      // Push this lines pointer 1-indexed to the stack
+      pointers.push(i);
+    } else {
+      // If next line is less indented, then pop the stack with their difference
+      // in indentation levels to retrieve the correct parent to point to.
+      //
+      // Example:
+      // 1. a
+      //  2. b
+      //    3. c
+      //  4. d <-- lesser indent
+      for (let diff = line.indent - nextLine.indent; diff > 0; --diff) {
+        pointers.pop();
       }
+
+      line.pointer = pointers.length === 0 ? -1 : pointers[pointers.length - 1];
     }
   }
 

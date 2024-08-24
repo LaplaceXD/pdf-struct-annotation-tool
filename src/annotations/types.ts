@@ -18,9 +18,4 @@ export type Line = {
    * The indentation level of the line.
    */
   indent: number;
-  /**
-   * Internal variable to keep track of the parent of the current line in an indent block.
-   * This is 0-indexed, -1 is used for root.
-   */
-  parent: number;
 };
