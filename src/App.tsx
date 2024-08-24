@@ -68,7 +68,7 @@ export default function App() {
 
   return (
     <div>
-      <header className="bg-black text-white px-12 py-6 flex justify-between">
+      <header className="bg-black text-white px-4 py-4 flex justify-between flex-col gap-2 md:px-12 md:py-6 md:flex-row">
         <input
           type="file"
           accept=".tsv"
@@ -84,7 +84,7 @@ export default function App() {
           }}
         />
 
-        <section role="menu" className="flex gap-4">
+        <section role="menu" className="flex gap-2 md:gap-4">
           <Button onClick={() => setExpanded(!expanded)} variant="outline">
             {expanded ? "Collapse" : "Expand"}
           </Button>
