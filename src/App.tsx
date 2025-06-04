@@ -37,31 +37,48 @@ export default function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Prevent the scrollbar from moving when using the arrow keys.
       e.preventDefault();
+      let tempActiveLine = activeLine;
+      let tempLines = lines
 
-      if (e.code === "ArrowDown") {
-        activeLine < lines.length - 1 && setActiveLine(activeLine + 1);
-        activeRef.current?.scrollIntoView(scrollBehavior);
-      } else if (e.code === "ArrowUp") {
-        activeLine > 0 && setActiveLine(activeLine - 1);
-        activeRef.current?.scrollIntoView(scrollBehavior);
-      } else if (e.code === "Space") {
-        setLines(backspace(lines.slice(), activeLine));
-        activeLine < lines.length - 1 && setActiveLine(activeLine + 1);
-      } else if (e.code === "Enter") {
-        setLines(insertNewLine(lines.slice(), activeLine));
-        activeLine < lines.length - 1 && setActiveLine(activeLine + 1);
-      } else if (e.code === "ArrowRight") {
-        setLines(incrementIndent(lines.slice(), activeLine));
-      } else if (e.code === "ArrowLeft") {
-        setLines(decrementIndent(lines.slice(), activeLine));
-      } else if (e.code === "Backspace") {
-        setLines(excludeLine(lines.slice(), activeLine));
-      } else if (e.code === "Delete") {
-        setLines(deleteLine(lines.slice(), activeLine));
+      switch (e.code) {
+        case "ArrowDown":
+          tempActiveLine = Math.min(activeLine + 1, lines.length - 1);
+          activeRef.current?.scrollIntoView(scrollBehavior);
+          break;
+        case "ArrowUp":
+          tempActiveLine = Math.max(activeLine - 1, 0);
+          activeRef.current?.scrollIntoView(scrollBehavior);
+          break;
+        case "Space":
+          tempLines = backspace(lines.slice(), activeLine);
+          break;
+        case "Enter":
+          tempActiveLine = Math.min(activeLine + 1, lines.length - 1);
+          tempLines = insertNewLine(lines.slice(), activeLine);
+          break;
+        case "ArrowRight":
+          tempLines = incrementIndent(lines.slice(), activeLine);
+          break;
+        case "ArrowLeft":
+          tempLines = decrementIndent(lines.slice(), activeLine);
+          break;
+        case "Backspace":
+          tempLines = excludeLine(lines.slice(), activeLine);
+          break;
+        case "Delete":
+          tempLines = deleteLine(lines.slice(), activeLine);
+          break;
+        default:
+          break;
+
       }
+
+      setActiveLine(tempActiveLine);
+      setLines(tempLines);
     };
 
     document.addEventListener("keydown", handleKeyDown);
+
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
@@ -80,7 +97,7 @@ export default function App() {
               const lines = await parseTsvToLines(file);
 
               setLines(lines);
-              setInitialValues(lines.map((line) => ({ ...line }))); // Deep copy
+              setInitialValues(structuredClone(lines));
               setFilename(file.name);
             }
           }}
@@ -91,7 +108,7 @@ export default function App() {
             {expanded ? "Collapse" : "Expand"}
           </Button>
           <Button
-            onClick={() => setLines(initialValues.map((line) => ({ ...line })))} // Deep copy
+            onClick={() => setLines(structuredClone(initialValues))}
             variant="outline"
           >
             Reset
