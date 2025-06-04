@@ -18,15 +18,16 @@ import {
   insertNewLine,
 } from "./annotations/actions";
 
-const scrollBehavior: ScrollIntoViewOptions = {
+const scrollBehavior = {
   behavior: "auto",
   block: "center",
   inline: "nearest",
-};
+} satisfies ScrollIntoViewOptions;
 
 export default function App() {
   const [expanded, setExpanded] = useState(false);
   const [initialValues, setInitialValues] = useState<Line[]>([]);
+  const [filename, setFilename] = useState("");
 
   const [lines, setLines] = useState<Line[]>([]);
   const [activeLine, setActiveLine] = useState(0);
@@ -80,6 +81,7 @@ export default function App() {
 
               setLines(lines);
               setInitialValues(lines.map((line) => ({ ...line }))); // Deep copy
+              setFilename(file.name);
             }
           }}
         />
@@ -94,7 +96,7 @@ export default function App() {
           >
             Reset
           </Button>
-          <Button onClick={() => saveLinesToTsv(lines)}>Save</Button>
+          <Button onClick={() => saveLinesToTsv(lines, filename)}>Save</Button>
         </section>
       </header>
 

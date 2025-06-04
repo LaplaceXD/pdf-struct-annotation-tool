@@ -1,4 +1,4 @@
-import type { Line } from "./types";
+import { type Line, Pointer, Transition } from "./types";
 
 /**
  * Parse a TSV file into an array of objects.
@@ -10,21 +10,16 @@ export async function parseTsvToLines(file: File): Promise<Line[]> {
   const contents = await file.text();
 
   const formattedContent = contents
-    // Split the text into lines.
     .split("\n")
-    // Remove "/r/n" from the end of each line.
     .map((line) => line.trimEnd())
-    // Remove empty lines.
     .filter((line) => !!line)
-    // Convert each line into an object.
     .map((line) => {
-      // Split the line by tabs to get the text, pointer, and label.
       const [text, pointer, label] = line.split("\t");
 
       return {
         text,
         pointer: parseInt(pointer),
-        label: label as Line["label"],
+        label: isValidLabel(label) ? label : Transition.IGNORE,
         indent: 0,
       } satisfies Line;
     });
@@ -33,32 +28,35 @@ export async function parseTsvToLines(file: File): Promise<Line[]> {
 }
 
 /**
+ * Check if the label is a valid Transition.
+ *
+ * @param label - The label to check.
+ * @returns true if the label is a valid Transition, false otherwise.
+ */
+export function isValidLabel(label: string): label is Transition {
+  return Object.values(Transition).includes(label as Transition);
+}
+
+/**
  * Save the array of objects to a TSV file.
  *
  * @param lines - The array of objects.
+ * @param filename - The name of the file to save.
  * @returns nothing
  */
-export function saveLinesToTsv(lines: Line[]): void {
+export function saveLinesToTsv(lines: Line[], filename: string): void {
   const content = lines
-    // Tab separate the values
-    .map((line) => {
-      return `${line.text}\t${line.pointer}\t${line.label}`;
-    })
-    // Join the lines with a newline
+    .map((line) => `${line.text}\t${line.pointer}\t${line.label}`)
     .join("\n");
 
-  // Create a blob with the content
   const blob = new Blob([content], { type: "text/plain" });
-  // Create a URL for the blob
   const url = URL.createObjectURL(blob);
 
-  // Create an anchor element to download the file
   const a = document.createElement("a");
   a.href = url;
-  a.download = "output.tsv";
+  a.download = filename;
   a.click();
 
-  // Revoke the URL
   URL.revokeObjectURL(url);
 }
 
@@ -75,19 +73,20 @@ export function calculateIndentFromPointers(lines: Line[]): Line[] {
     const line = lines[i];
     const prevLine = lines[i - 1];
 
-    if (prevLine.label === "d") {
-      // Indent increases for every indent block transition labels found
+    if (prevLine.label === Transition.INDENTED_BLOCK) {
       indent++;
-    } else if (prevLine.pointer > 0) {
-      // If the previous line has a pointer, then use the indentation level of the line
-      // being pointed to.
-      indent = lines[prevLine.pointer - 1].indent + 1;
-    } else if (prevLine.pointer === -1) {
-      // If the previous line has a pointer of -1, then it is a root line, reset the indent
-      indent = 0;
+      line.indent = indent;
+
+      continue
     }
 
-    line.indent = indent;
+    const doesPrevLineHavePointer = prevLine.pointer > 0;
+
+    if (doesPrevLineHavePointer) {
+      line.indent = lines[prevLine.pointer].indent + 1;
+    } else if (line.pointer === Pointer.ROOT) {
+      indent = 0;
+    }
   }
 
   return lines;
@@ -101,51 +100,53 @@ export function calculateIndentFromPointers(lines: Line[]): Line[] {
  * @returns The array of objects with the pointers updated.
  */
 export function updatePointersFromIndent(lines: Line[]) {
-  // Stack to keep track of the pointers encountered for the current depth
-  const pointers = [];
+  // Keep track of the pointers of indented block markers those mark with `Transition.INDENTED_BLOCK`
+  const indentedBlockMarkers = [];
 
   for (let i = 1; i < lines.length; ++i) {
     const line = lines[i - 1];
     const nextLine = lines[i];
 
-    if (line.indent === nextLine.indent) {
-      // If next line has the same indentation level
-      // then unset the pointer
-      line.pointer = 0;
-      // Reset the label for previously indented blocks that now have no children
-      line.label = line.label === "d" ? "s" : line.label;
-    } else if (line.indent < nextLine.indent) {
-      // If next line is indented, then this line is an indented block
-      // indented block are labeled as "d", and will have unset pointers
-      line.pointer = 0;
-      line.label = "d";
+    const isSameIndentAsNext = line.indent === nextLine.indent;
 
-      // Push this line to the stack of pointers, since it is a parent indent block
-      // keep in mind that the current line index is i - 1, but we are
-      // pushing i, since the pointers are 1-indexed
-      pointers.push(i);
-    } else {
-      // If next line is less indented, then pop the stack with their difference
-      // in indentation levels to retrieve the correct parent to point to.
-      //
-      // Example:
-      // 1. a
-      //  2. b <-- last pointer in stack
-      //    3. c
-      //  4. d <-- next line has a lesser indent, and has an indent difference of 1
-      //
-      // Pop once as the difference is 1, which results in:
-      // 1. a <-- last pointer in stack
-      //  2. b
-      //    3. c
-      //  4. d
-      for (let diff = line.indent - nextLine.indent; diff > 0; --diff) {
-        pointers.pop();
-      }
+    if (isSameIndentAsNext) {
+      line.pointer = 0;
+      line.label = line.label === Transition.INDENTED_BLOCK ? Transition.SAME_LEVEL : line.label;
 
-      // Set the pointer to the last pointer in the stack, or -1 if the stack is empty
-      line.pointer = pointers.length === 0 ? -1 : pointers[pointers.length - 1];
+      continue
     }
+
+    const isNextLineIndented = nextLine.indent > line.indent;
+
+    if (isNextLineIndented) {
+      line.pointer = 0;
+      line.label = Transition.INDENTED_BLOCK;
+      indentedBlockMarkers.push(i);
+
+      continue
+    }
+
+    // If next line is less indented, then pop the stack with their difference
+    // in indentation levels to retrieve the correct parent to point to.
+    //
+    // Example:
+    // 1. a
+    //  2. b <-- last pointer in stack
+    //    3. c
+    //  4. d <-- next line has a lesser indent, and has an indent difference of 1
+    //
+    // Pop once as the difference is 1, which results in:
+    // 1. a <-- last pointer in stack
+    //  2. b
+    //    3. c
+    //  4. d
+    for (let diff = line.indent - nextLine.indent; diff > 0; --diff) {
+      indentedBlockMarkers.pop();
+    }
+
+    const lastIndentedBlockMarkerPointer = indentedBlockMarkers[indentedBlockMarkers.length - 1];
+
+    line.pointer = indentedBlockMarkers.length === 0 ? Pointer.ROOT : lastIndentedBlockMarkerPointer;
   }
 
   return lines;

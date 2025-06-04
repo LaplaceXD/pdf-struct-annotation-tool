@@ -1,4 +1,4 @@
-import type { Line } from "./types";
+import { type Line, Transition } from "./types";
 import { updatePointersFromIndent } from "./utils";
 
 /**
@@ -10,8 +10,7 @@ import { updatePointersFromIndent } from "./utils";
  * @returns The array of objects with the indentation applied.
  */
 function decrementChildIndent(lines: Line[], target: number) {
-  // This only works if the target is an indented block transition
-  if (lines[target].label !== "d") return lines;
+  if (lines[target].label !== Transition.INDENTED_BLOCK) return lines;
 
   for (
     let i = target + 1;
@@ -32,16 +31,12 @@ function decrementChildIndent(lines: Line[], target: number) {
  * @returns The array of objects with the indentation applied.
  */
 export function incrementIndent(lines: Line[], target: number): Line[] {
-  if (
-    // Can't indent the first line
-    target === 0 ||
-    // Can only indent if the previous line has the same or less indentation
-    lines[target - 1].indent < lines[target].indent
-  )
-    return lines;
+  const isFirstLine = target === 0;
+  const isPreviousLineSameOrEqualIndent = lines[target - 1].indent <= lines[target].indent;
+  if (isFirstLine || isPreviousLineSameOrEqualIndent) return lines;
 
   ++lines[target].indent;
-  lines[target].label = "s";
+  lines[target].label = Transition.SAME_LEVEL;
 
   return updatePointersFromIndent(lines);
 }
@@ -54,19 +49,14 @@ export function incrementIndent(lines: Line[], target: number): Line[] {
  * @returns The array of objects with the indentation applied.
  */
 export function decrementIndent(lines: Line[], target: number): Line[] {
-  if (
-    // Can't decrement the first line
-    target === 0 ||
-    // Target line is already at root indentation level
-    lines[target].indent === 0
-  )
-    return lines;
+  const isFirstLine = target === lines.length - 1;
+  const isLineAtRootIndent = lines[target].indent === 0;
+  if (isFirstLine || isLineAtRootIndent) return lines;
 
-  // Decrement the indentation of children lines
   lines = decrementChildIndent(lines, target);
 
   --lines[target].indent;
-  lines[target].label = "s";
+  lines[target].label = Transition.SAME_LEVEL;
 
   return updatePointersFromIndent(lines);
 }
@@ -79,10 +69,8 @@ export function decrementIndent(lines: Line[], target: number): Line[] {
  * @returns The array of objects with the new line inserted.
  */
 export function insertNewLine(lines: Line[], target: number) {
-  // Decrement the indentation of children lines, if the target is an indented block
   lines = decrementChildIndent(lines, target);
-  // Set transition label
-  lines[target].label = "s";
+  lines[target].label = Transition.SAME_LEVEL;
 
   return lines;
 }
@@ -95,10 +83,8 @@ export function insertNewLine(lines: Line[], target: number) {
  * @returns The array of objects with the line deleted.
  */
 export function deleteLine(lines: Line[], target: number) {
-  // Decrement the indentation of children lines, if the target is an indented block
   lines = decrementChildIndent(lines, target);
-  // Set transition label
-  lines[target].label = "e";
+  lines[target].label = Transition.DELETE;
 
   return lines;
 }
@@ -111,10 +97,8 @@ export function deleteLine(lines: Line[], target: number) {
  * @returns The array of objects with the line excluded.
  */
 export function excludeLine(lines: Line[], target: number) {
-  // Decrement the indentation of children lines, if the target is an indented block
   lines = decrementChildIndent(lines, target);
-  // Set transition label
-  lines[target].label = "x";
+  lines[target].label = Transition.IGNORE;
 
   return lines;
 }
@@ -127,16 +111,13 @@ export function excludeLine(lines: Line[], target: number) {
  * @returns The array of objects with the backspace operation applied.
  */
 export function backspace(lines: Line[], target: number) {
-  // Decrement the indentation of children lines, if the target is an indented block
   lines = decrementChildIndent(lines, target);
-  // Set transition label
-  lines[target].label = "c";
+  lines[target].label = Transition.CONTINUOUS;
 
-  // Since this line and the next line are being joined, they should have the same indentation
-  if (
-    target + 1 < lines.length &&
-    lines[target + 1].indent !== lines[target].indent
-  ) {
+  const isTargetWithinLineBounds = target + 1 < lines.length;
+  const isSameIndentAsNextLine = lines[target + 1].indent === lines[target].indent;
+
+  if (isTargetWithinLineBounds && !isSameIndentAsNextLine) {
     lines[target + 1].indent = lines[target].indent;
     lines = updatePointersFromIndent(lines);
   }
