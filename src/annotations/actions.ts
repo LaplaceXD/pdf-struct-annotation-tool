@@ -32,7 +32,7 @@ function decrementChildIndent(lines: Line[], target: number) {
  */
 export function incrementIndent(lines: Line[], target: number): Line[] {
   const isFirstLine = target === 0;
-  const isPreviousLineSameOrEqualIndent = lines[target - 1].indent <= lines[target].indent;
+  const isPreviousLineSameOrEqualIndent = lines[target - 1].indent < lines[target].indent;
   if (isFirstLine || isPreviousLineSameOrEqualIndent) return lines;
 
   ++lines[target].indent;
@@ -49,7 +49,7 @@ export function incrementIndent(lines: Line[], target: number): Line[] {
  * @returns The array of objects with the indentation applied.
  */
 export function decrementIndent(lines: Line[], target: number): Line[] {
-  const isFirstLine = target === lines.length - 1;
+  const isFirstLine = target === 0;
   const isLineAtRootIndent = lines[target].indent === 0;
   if (isFirstLine || isLineAtRootIndent) return lines;
 
