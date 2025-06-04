@@ -11,7 +11,7 @@ export async function parseTsvToLines(file: File): Promise<Line[]> {
 
   const formattedContent = contents
     .split("\n")
-    .map((line) => line.trimEnd())
+    .map((line) => line.replace(/[\r\n]+$/, ""))
     .filter((line) => !!line)
     .map((line) => {
       const [text, pointer, label] = line.split("\t");
