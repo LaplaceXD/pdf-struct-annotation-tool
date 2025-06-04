@@ -85,7 +85,7 @@ export function calculateIndentFromPointers(lines: Line[]): Line[] {
     if (doesPrevLineHavePointer) {
       line.indent = lines[prevLine.pointer].indent + 1;
     } else if (line.pointer === Pointer.ROOT) {
-      indent = 0;
+      line.indent = 0;
     }
   }
 
