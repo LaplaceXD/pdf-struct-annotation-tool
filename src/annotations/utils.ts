@@ -20,7 +20,7 @@ export async function parseTsvToLines(file: File): Promise<Line[]> {
         text,
         pointer: parseInt(pointer),
         label: isValidLabel(label) ? label : Transition.IGNORE,
-        indent: 0,
+        indent: Pointer.UNSET,
       } satisfies Line;
     });
 
