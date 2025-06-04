@@ -83,7 +83,8 @@ export function calculateIndentFromPointers(lines: Line[]): Line[] {
     const doesPrevLineHavePointer = prevLine.pointer > 0;
 
     if (doesPrevLineHavePointer) {
-      line.indent = lines[prevLine.pointer].indent + 1;
+      const commonParentLine = lines[prevLine.pointer - 1];
+      line.indent = commonParentLine.indent + 1;
     } else if (line.pointer === Pointer.ROOT) {
       line.indent = 0;
     }
