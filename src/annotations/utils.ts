@@ -112,7 +112,10 @@ export function updatePointersFromIndent(lines: Line[]) {
 
     if (isSameIndentAsNext) {
       line.pointer = 0;
-      line.label = line.label === Transition.INDENTED_BLOCK ? Transition.SAME_LEVEL : line.label;
+
+      if (line.label === Transition.INDENTED_BLOCK) {
+        line.label = Transition.SAME_LEVEL;
+      }
 
       continue
     }
