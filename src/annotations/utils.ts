@@ -148,9 +148,9 @@ export function updatePointersFromIndent(lines: Line[]) {
       indentedBlockMarkers.pop();
     }
 
-    const lastIndentedBlockMarkerPointer = indentedBlockMarkers[indentedBlockMarkers.length - 1];
+    const parentLine = indentedBlockMarkers[indentedBlockMarkers.length - 1];
 
-    line.pointer = indentedBlockMarkers.length === 0 ? Pointer.ROOT : lastIndentedBlockMarkerPointer;
+    line.pointer = indentedBlockMarkers.length === 0 ? Pointer.ROOT : parentLine;
   }
 
   return lines;
