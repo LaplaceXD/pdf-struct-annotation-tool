@@ -8,14 +8,14 @@ import {
 } from "react";
 
 import type { Line } from "./annotations/types";
-import { saveLinesToTsv, parseTsvToLines } from "./annotations/utils";
+import { parseTsvToLines, saveLinesToTsv } from "./annotations/utils";
 import {
+  backspace,
+  decrementIndent,
   deleteLine,
   excludeLine,
-  insertNewLine,
-  backspace,
   incrementIndent,
-  decrementIndent,
+  insertNewLine,
 } from "./annotations/actions";
 
 const scrollBehavior: ScrollIntoViewOptions = {
@@ -157,16 +157,18 @@ const LineDisplay = forwardRef<
         line.label === "x" && "!bg-red-200",
       )}
     >
-      {expanded ? (
-        <>
-          <span className="justify-self-end text-gray-600 text-sm">
-            {line.label}
-          </span>
-          <span className="justify-self-end text-gray-600 text-sm">
-            {line.pointer}
-          </span>
-        </>
-      ) : null}
+      {expanded
+        ? (
+          <>
+            <span className="justify-self-end text-gray-600 text-sm">
+              {line.label}
+            </span>
+            <span className="justify-self-end text-gray-600 text-sm">
+              {line.pointer}
+            </span>
+          </>
+        )
+        : null}
       <span className="justify-self-end text-gray-600 text-sm">{num}</span>
       <span
         className={clsx(
@@ -177,9 +179,9 @@ const LineDisplay = forwardRef<
         style={{ paddingLeft: `${line.indent * 2}rem` }}
       >
         {line.text}
-        {line.label === "c" ? (
-          <CarriageReturn className="inline ml-1 text-red-400" />
-        ) : null}
+        {line.label === "c"
+          ? <CarriageReturn className="inline ml-1 text-red-400" />
+          : null}
       </span>
     </li>
   );
